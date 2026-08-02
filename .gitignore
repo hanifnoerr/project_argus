@@ -3,11 +3,11 @@ __pycache__/
 .ipynb_checkpoints/
 *.py[cod]
 
-GAVE2_preliminary/
-external/
-assets/
-runs/
-submissions/
+/GAVE2_preliminary/
+/external/
+/assets/
+/runs/
+/submissions/
 
 *.pt
 *.pth
@@ -15,4 +15,3 @@ submissions/
 *.zip
 *.partial
 *.part
-

@@ -1,0 +1,7 @@
+CRAE 11.897132
+CRVE 18.893378
+AVR 0.629698
+artery_density 0.031166
+vein_density 0.038895
+artery_fractal_dimension 1.406134
+vein_fractal_dimension 1.404362

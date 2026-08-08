@@ -47,31 +47,94 @@ The notebooks acquire the public R2-V2 and MINIMA sources and checkpoints.
 `NOTICE.md` records their source revisions and checkpoint SHA-256 values. The
 acquisition code verifies these values before use.
 
-## Reproduction sequence
+## Reproduce the submitted archive
 
-The final V13 selector uses the registered-FFA teacher produced by the first
-notebook. Run the notebooks in this order on the same Google Drive account:
+V13 is not a standalone run. It uses the selected Task 1 and Task 2 probability
+stores produced by V12. Run both notebooks on the same Google Drive account and
+keep the V12 outputs when starting V13.
 
-1. `submission/GAVE2_R2V2_FFA_Residual_V12_Colab.ipynb`
-2. `submission/GAVE2_Channel_Path_FFA_V13_Colab.ipynb`
-
-Before opening Colab, build the two runtime archives from this checkout:
+### 1. Check out the locked source
 
 ```bash
+git clone https://github.com/hanifnoerr/project_argus.git
+cd project_argus
+git checkout gave2-s013
 python scripts/audit_source_tree.py
+```
+
+The tag `gave2-s013` identifies the source used for this verification release.
+
+### 2. Add the organizer data and build the runtimes
+
+Place the organizer directory at `project_argus/GAVE2_preliminary/`. Build both
+runtime archives from the repository root:
+
+```bash
 python scripts/build_miccai_v12_archive.py --output miccai_v12.zip --force
 python scripts/build_miccai_v13_archive.py --output miccai_v13.zip --force
 ```
 
-Each runtime archive includes the organizer data from `GAVE2_preliminary/` but
-excludes weights, checkpoints, and run directories. Upload both archives to
-`MyDrive/MICCAI2026/`. The notebooks verify the archive manifest before
-extracting it.
+The builders include `GAVE2_preliminary/` and the required source files. They
+exclude checkpoints, previous runs, and cached predictions. Upload the archives
+to these exact Google Drive paths:
 
-The notebooks expect a BF16-capable CUDA GPU. The recorded run used one NVIDIA
-L4 GPU with 22.03 GiB of memory. V12 creates the prerequisite run under
-`MyDrive/MICCAI2026/runs/gave2_v12_safe_3fold`; V13 reads that immutable output
-and writes its own run under `runs/gave2_v13_channel_path_3fold`.
+```text
+MyDrive/MICCAI2026/miccai_v12.zip
+MyDrive/MICCAI2026/miccai_v13.zip
+```
+
+### 3. Run V12 from a clean Drive run directory
+
+Open `submission/GAVE2_R2V2_FFA_Residual_V12_Colab.ipynb` in Colab and run all
+cells in order. Use a BF16-capable CUDA GPU. The notebook downloads and verifies
+the pinned R2-V2 and MINIMA assets, creates the three folds with seed 77, trains
+both tasks, and writes the prerequisite stores under:
+
+```text
+MyDrive/MICCAI2026/runs/gave2_r2v2_v8/predictions/
+MyDrive/MICCAI2026/runs/gave2_v12_safe_3fold/predictions/selected/
+```
+
+Do not delete those directories. V13 checks for each V12
+`completion_manifest.json` and stops if any selected store is absent.
+
+### 4. Run V13 without clearing the V12 outputs
+
+Open `submission/GAVE2_Channel_Path_FFA_V13_Colab.ipynb` and run all cells in
+order. The recorded run used Python 3.12, PyTorch 2.11.0+cu128, Kornia 0.8.3,
+and one NVIDIA L4 with 22.03 GiB. Its selected profile was the following for
+both Task 1 and Task 2:
+
+```json
+{
+  "base_channels": 24,
+  "batch_size": 2,
+  "activation_checkpointing": false
+}
+```
+
+Check `runs/gave2_v13_channel_path_3fold/selected_profiles.json` before
+training. A fallback profile changes the trained model and is not the recorded
+GAVE2-S013 configuration.
+
+### 5. Verify the final output
+
+The notebook writes the competition archive to:
+
+```text
+MyDrive/MICCAI2026/submissions/gave2_v13_r51_topology_safe/
+  v13_candidate/梯度不下降队.zip
+```
+
+The recorded archive contains `Task1/`, `Task2/`, and `Task3/` at its root. Its
+size is `69,894,748` bytes and its SHA-256 is:
+
+```text
+3e69271eb51d98bdc919345bfe0c0854ec42bdc389a29494cec686d86a0f7e03
+```
+
+The V13 notebook also checks the 100 MB limit, folder counts, threshold
+preservation after seven-bit compaction, Task 3 provenance, and release gates.
 
 ## Python environment and tests
 
@@ -94,4 +157,3 @@ The repository does not contain the organizer dataset, external checkpoints,
 trained fold checkpoints, cached predictions, or competition output images.
 `archive_manifest.json` records the exact source tree. Run
 `python scripts/audit_source_tree.py` after cloning to verify it.
-

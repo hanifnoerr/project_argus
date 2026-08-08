@@ -1,80 +1,97 @@
-# Five-State Full-Resolution Residual Pipeline
+# GAVE2-S013 Reproduction Source
 
-This repository contains the source code used to produce preliminary submission
-`GAVE2-S013` for the GAVE2 challenge. The submission was made by team
-`梯度不下降队` on 19 July 2026.
+This repository contains the source used for the final GAVE2 preliminary
+submission from team `梯度不下降队`.
+
+| Field | Value |
+|---|---:|
+| Submission ID | `GAVE2-S013` |
+| Release | `v13-r51-fine-calibration` |
+| Runtime build | `gave2-v13-r6-r51-fine-calibration` |
+| Overall score | `7.69256` |
+| Task 1 | `7.91771` |
+| Task 2 | `7.95995` |
+| Task 3 | `7.31260` |
+| Final preliminary rank | `14` |
 
 ## Authors
 
 - Hanif Noer Rofiq, Master of Artificial Intelligence student, Monash University
 - Xinhe Yang, Master of Artificial Intelligence student, Monash University
 
-## Recorded preliminary result
+## Included source
 
-| Result | Value |
-|---|---:|
-| Final preliminary rank | 14 |
-| Overall score | 7.69256 |
-| Task 1 score | 7.91771 |
-| Task 2 score | 7.95995 |
-| Task 3 score | 7.31260 |
+The final pipeline has three required stages:
 
-## Method scope
+1. `experiments/gave2_v8`: inference with the released R2-V2 artery/vein and
+   binary-vessel teachers.
+2. `experiments/gave2_v12`: CFP-to-FFA registration and generation of the
+   registered-FFA teacher used by the final selector.
+3. `experiments/gave2_v13`: five-state residual training, R5.1 topology-safe
+   selection, Task 3 vein-density correction, submission assembly, and release
+   checks.
 
-The pipeline uses the public R2-V2 `av` and `bv` checkpoints as fixed teacher
-models. R2-V2 was the winning method of the GAVE challenge at MICCAI 2025. We
-did not train or modify those teacher weights.
+The small modules retained under `gave2_ensemble` and `gave2_v11` are imported
+by those three stages. No unrelated CMRRWNet, SAM, YOLO, V9, V10, V14, or V15
+experiment is included.
 
-Our GAVE2-specific stages are:
+## Data and external weights
 
-- a five-state residual U-Net for background, artery-only, vein-only, crossing,
-  and uncertain-vessel states;
-- native `1536 x 1024` processing without crop-based training;
-- CFP-to-FFA registration with pinned MINIMA correspondences for Task 2;
-- one prevalence-stratified three-fold split for training and model selection;
-- R5.1 prune-only calibration with protected teacher paths; and
-- a gated Task 3 vein-density correction. Other Task 3 values remain fixed.
+The organizer dataset is not redistributed. Place the provided directory at:
 
-This is an adaptation of public R2-V2 weights to the GAVE2 data and output
-protocol. It is not presented as a new foundation architecture.
-
-## Reproduction entry point
-
-Open and run:
-
-`submission/GAVE2_Channel_Path_FFA_V13_Colab.ipynb`
-
-The notebook downloads pinned external source revisions and weights, verifies
-their SHA-256 hashes, prepares the organizer data, trains three folds, selects
-the final settings, and writes the competition ZIP. It expects a BF16-capable
-CUDA GPU. The recorded run used one NVIDIA L4 GPU with 22.03 GiB of memory.
-
-Install the Python dependencies with:
-
-```bash
-python -m pip install -r experiments/gave2_v13/requirements.txt
+```text
+GAVE2_preliminary/
 ```
 
-Run the source-only tests with:
+The notebooks acquire the public R2-V2 and MINIMA sources and checkpoints.
+`NOTICE.md` records their source revisions and checkpoint SHA-256 values. The
+acquisition code verifies these values before use.
+
+## Reproduction sequence
+
+The final V13 selector uses the registered-FFA teacher produced by the first
+notebook. Run the notebooks in this order on the same Google Drive account:
+
+1. `submission/GAVE2_R2V2_FFA_Residual_V12_Colab.ipynb`
+2. `submission/GAVE2_Channel_Path_FFA_V13_Colab.ipynb`
+
+Before opening Colab, build the two runtime archives from this checkout:
 
 ```bash
+python scripts/audit_source_tree.py
+python scripts/build_miccai_v12_archive.py --output miccai_v12.zip --force
+python scripts/build_miccai_v13_archive.py --output miccai_v13.zip --force
+```
+
+Each runtime archive includes the organizer data from `GAVE2_preliminary/` but
+excludes weights, checkpoints, and run directories. Upload both archives to
+`MyDrive/MICCAI2026/`. The notebooks verify the archive manifest before
+extracting it.
+
+The notebooks expect a BF16-capable CUDA GPU. The recorded run used one NVIDIA
+L4 GPU with 22.03 GiB of memory. V12 creates the prerequisite run under
+`MyDrive/MICCAI2026/runs/gave2_v12_safe_3fold`; V13 reads that immutable output
+and writes its own run under `runs/gave2_v13_channel_path_3fold`.
+
+## Python environment and tests
+
+Install a PyTorch build compatible with the selected CUDA runtime, then run:
+
+```bash
+python -m pip install -r requirements.txt
 python -m pytest tests/gave2_v13 tests/gave2_v12 \
   tests/gave2_v8/test_store_and_fusion.py \
   tests/gave2_v8/test_submission.py \
   --ignore=tests/gave2_v12/test_task3.py -q
 ```
 
-The omitted Task 3 audit reads the organizer data. After placing the dataset at
-`GAVE2_preliminary/`, remove the `--ignore` option to run the complete release
-test set used by the notebook.
+`tests/gave2_v12/test_task3.py` reads the organizer dataset. Run it after
+placing `GAVE2_preliminary/` at the repository root.
 
-## Files not included
+## Release boundaries
 
-The GAVE2 dataset, trained fold checkpoints, downloaded R2-V2 weights, MINIMA
-weights, and run directories are excluded. The notebook obtains the external
-weights from their original releases and checks their hashes. Access to the
-organizer dataset is required.
+The repository does not contain the organizer dataset, external checkpoints,
+trained fold checkpoints, cached predictions, or competition output images.
+`archive_manifest.json` records the exact source tree. Run
+`python scripts/audit_source_tree.py` after cloning to verify it.
 
-`archive_manifest.json` records the SHA-256 hash of every file in the audited
-source snapshot. The corresponding source ZIP has SHA-256
-`b52c81a6f1ceadaf2c9553c47766a0aa6be241f8d0b23fec9b0ba05b65ee0ef2`.

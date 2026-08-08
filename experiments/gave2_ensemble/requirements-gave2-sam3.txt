@@ -1,8 +1,0 @@
-numpy
-pillow
-torch==2.10.0
-torchvision
-# Install official SAM3 separately:
-# git clone https://github.com/facebookresearch/sam3.git external/sam3
-# cd external/sam3
-# pip install -e ".[train]"

@@ -1,6 +1,7 @@
 # External Method and Asset Notice
 
-This repository does not vendor external model weights.
+Acquisition scripts fetch the external model weights listed below and verify
+their SHA-256 values before use.
 
 ## R2-V2
 

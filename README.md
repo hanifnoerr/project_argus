@@ -31,9 +31,7 @@ The final pipeline has three required stages:
    selection, Task 3 vein-density correction, submission assembly, and release
    checks.
 
-The small modules retained under `gave2_ensemble` and `gave2_v11` are imported
-by those three stages. No unrelated CMRRWNet, SAM, YOLO, V9, V10, V14, or V15
-experiment is included.
+Shared utility modules provide dependencies imported by these stages.
 
 ## Data and external weights
 
@@ -49,20 +47,21 @@ acquisition code verifies these values before use.
 
 ## Reproduce the submitted archive
 
-V13 is not a standalone run. It uses the selected Task 1 and Task 2 probability
-stores produced by V12. Run both notebooks on the same Google Drive account and
-keep the V12 outputs when starting V13.
+V13 requires the selected Task 1 and Task 2 probability stores produced by V12.
+Run both notebooks on the same Google Drive account and keep the V12 outputs
+when starting V13.
 
 ### 1. Check out the locked source
 
 ```bash
 git clone https://github.com/hanifnoerr/project_argus.git
 cd project_argus
-git checkout gave2-s013
+git checkout gave2-s013-verification
 python scripts/audit_source_tree.py
 ```
 
-The tag `gave2-s013` identifies the source used for this verification release.
+The tag `gave2-s013-verification` identifies the source used for this
+verification release.
 
 ### 2. Add the organizer data and build the runtimes
 
@@ -74,9 +73,8 @@ python scripts/build_miccai_v12_archive.py --output miccai_v12.zip --force
 python scripts/build_miccai_v13_archive.py --output miccai_v13.zip --force
 ```
 
-The builders include `GAVE2_preliminary/` and the required source files. They
-exclude checkpoints, previous runs, and cached predictions. Upload the archives
-to these exact Google Drive paths:
+The builders package `GAVE2_preliminary/` with the source needed by each
+notebook. Upload the archives to these exact Google Drive paths:
 
 ```text
 MyDrive/MICCAI2026/miccai_v12.zip
@@ -95,10 +93,10 @@ MyDrive/MICCAI2026/runs/gave2_r2v2_v8/predictions/
 MyDrive/MICCAI2026/runs/gave2_v12_safe_3fold/predictions/selected/
 ```
 
-Do not delete those directories. V13 checks for each V12
-`completion_manifest.json` and stops if any selected store is absent.
+Keep those directories for the V13 run. V13 checks each V12
+`completion_manifest.json` before model selection.
 
-### 4. Run V13 without clearing the V12 outputs
+### 4. Run V13 with the V12 outputs retained
 
 Open `submission/GAVE2_Channel_Path_FFA_V13_Colab.ipynb` and run all cells in
 order. The recorded run used Python 3.12, PyTorch 2.11.0+cu128, Kornia 0.8.3,
@@ -151,9 +149,7 @@ python -m pytest tests/gave2_v13 tests/gave2_v12 \
 `tests/gave2_v12/test_task3.py` reads the organizer dataset. Run it after
 placing `GAVE2_preliminary/` at the repository root.
 
-## Release boundaries
+## Source integrity
 
-The repository does not contain the organizer dataset, external checkpoints,
-trained fold checkpoints, cached predictions, or competition output images.
 `archive_manifest.json` records the exact source tree. Run
 `python scripts/audit_source_tree.py` after cloning to verify it.

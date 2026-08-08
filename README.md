@@ -123,6 +123,10 @@ The notebook writes the competition archive to:
 MyDrive/MICCAI2026/submissions/gave2_v13_r51_topology_safe/
   v13_candidate/梯度不下降队.zip
 ```
+the archieve can be downloaded here:
+```text
+https://drive.google.com/drive/folders/1smF1kTs5RxDSgEmLjBCwmrJNa2neuPbs?usp=sharing\
+```
 
 The recorded archive contains `Task1/`, `Task2/`, and `Task3/` at its root. Its
 size is `69,894,748` bytes and its SHA-256 is:
